@@ -29,20 +29,35 @@ void setup(){
 }
 
 
-uint64_t chipid=ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
-Serial.printf("***ESP32 Chip ID = %04X%08X\n",(uint16_t)(chipid>>32),(uint32_t)chipid);//print High 2 bytes
-char buffer[200];
-sprintf(buffer, "%04X%08X",(uint16_t)(chipid>>32),(uint32_t)chipid);
 
-doc["device"]["IP"] = WiFi.localIP().toString();
-doc["device"]["RSSI"] = String(Wifi.RSSI());
-doc["device"]["chipid"] = buffer;
+
 
 
 
 void loop() {
 
-  if (Serial.available()>0){
+  getDevice();
+  readSmartmeter();
+  postData();
+  delay(5000); //wait 5s later change to execution in setuploop with sleep and wake up ...
+
+}
+
+void getDevice(){
+  uint64_t chipid=ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
+  Serial.printf("***ESP8266 Chip ID = %04X%08X\n",(uint16_t)(chipid>>32),(uint32_t)chipid);//print High 2 bytes
+  char buffer[200];
+  sprintf(buffer, "%04X%08X",(uint16_t)(chipid>>32),(uint32_t)chipid);
+
+  doc["device"]["IP"] = WiFi.localIP().toString();
+  doc["device"]["RSSI"] = String(Wifi.RSSI());
+  doc["device"]["chipid"] = buffer;
+}
+
+int readSmartmeter()
+  {
+    /*do stuff,to read the value*/
+    if (Serial.available()>0){
     int rx = Serial.read();
     if (rx < 16){
       rxs = "0" + String(rx, HEX);
@@ -79,5 +94,27 @@ void loop() {
     data = "";
     }  
   }
-}
 
+  // write into json
+  doc["sensors"]["smartmeter"] = data;
+  return data;
+  
+  }
+
+void postData()
+  // push data to mongodb
+  {
+    if(WiFi.status()== WL_CONNECTED){
+      HTTPClient http;
+
+      http.begin(serverName);
+      http.addHeader("Content-Type", "application/json");
+
+      String json;
+      serializeJson(doc, json);
+
+      Serial.println(json);
+      int httpResponseCode = http.POST(json);
+      Serial.println(httpResponseCode);
+      }
+  }
