@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
-#include <HTTPClient.h>
-#inlcude "secrets.h"
+//#include <HTTPClient.h>
+#include <ESP8266HTTPClient.h>
+#include "secrets.h"
 
 
 String data = "";
@@ -31,27 +32,14 @@ void setup(){
 
 
 
-
-
-
-void loop() {
-
-  getDevice();
-  readSmartmeter();
-  postData();
-  delay(5000); //wait 5s later change to execution in setuploop with sleep and wake up ...
-
-}
-
 void getDevice(){
-  uint64_t chipid=ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
-  Serial.printf("***ESP8266 Chip ID = %04X%08X\n",(uint16_t)(chipid>>32),(uint32_t)chipid);//print High 2 bytes
-  char buffer[200];
-  sprintf(buffer, "%04X%08X",(uint16_t)(chipid>>32),(uint32_t)chipid);
+  //byte mac[6];
+  //WiFi.macAddress(mac);//The chip ID is essentially its MAC address(length: 6 bytes).
+  //Serial.printf("***ESP8266 Chip ID = %04X%08X\n", chipid);//print High 2 bytes
 
   doc["device"]["IP"] = WiFi.localIP().toString();
-  doc["device"]["RSSI"] = String(Wifi.RSSI());
-  doc["device"]["chipid"] = buffer;
+  doc["device"]["RSSI"] = String(WiFi.RSSI());
+  doc["device"]["chipid"] = String(WiFi.macAddress());
 }
 
 int readSmartmeter()
@@ -89,6 +77,7 @@ int readSmartmeter()
         String verbrauch = data.substring(pos, pos + 16); //
         Serial.print("Verbrauch: ");
         Serial.println(verbrauch);
+        doc["sensors"]["smartmeter"] = verbrauch.toInt();
       }
     Serial.println(data);
     data = "";
@@ -96,8 +85,8 @@ int readSmartmeter()
   }
 
   // write into json
-  doc["sensors"]["smartmeter"] = data;
-  return data;
+  
+  return doc["sensors"]["smartmeter"];
   
   }
 
@@ -106,8 +95,8 @@ void postData()
   {
     if(WiFi.status()== WL_CONNECTED){
       HTTPClient http;
-
-      http.begin(serverName);
+      WiFiClient client;
+      http.begin(client, serverName);
       http.addHeader("Content-Type", "application/json");
 
       String json;
@@ -118,3 +107,12 @@ void postData()
       Serial.println(httpResponseCode);
       }
   }
+
+void loop() {
+
+  getDevice();
+  readSmartmeter();
+  postData();
+  delay(5000); //wait 5s later change to execution in setuploop with sleep and wake up ...
+
+}
