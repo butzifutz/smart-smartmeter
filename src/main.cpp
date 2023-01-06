@@ -20,6 +20,9 @@ void setup(){
   digitalWrite(LED_BUILTIN, HIGH);
   Serial.begin(9600);
   delay(500);
+  connectWifi();
+}
+void connectWifi(){
   Serial.println("Connecting to ");
   Serial.println(" ");
   Serial.print(ssid);
@@ -145,10 +148,16 @@ void postData()
         }
       
       }
+    else{
+      connectWifi();
+      postData();
+    }
+  
       
   }
 
 void loop() {
+   
   Serial.println("reading device info:");
   getDevice();
 
