@@ -12,7 +12,7 @@ String end = "1b1b1b1b1a";
 String verbrauchMarker = "77070100010800ff64";
 String rxs; 
 StaticJsonDocument<500> doc;
-long lastValue = 5900 ; //because I'm to lazy to use the checksum
+long lastValue = 6900 ; //because I'm to lazy to use the checksum
 int LED_BUILTIN = 2;
 const char* Endpoint = "https://eu-central-1.aws.data.mongodb-api.com/app/smartmeter_incoming-nzfqu/endpoint/incoming_webhook?secret=0this1one2is3super4secret5";
 
