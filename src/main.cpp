@@ -12,6 +12,7 @@ String end = "1b1b1b1b1a";
 String verbrauchMarker = "77070100010800ff64";
 String rxs; 
 StaticJsonDocument<500> doc;
+long lastValue = 5900 ; //because I'm to lazy to use the checksum
 int LED_BUILTIN = 2;
 const char* Endpoint = "https://eu-central-1.aws.data.mongodb-api.com/app/smartmeter_incoming-nzfqu/endpoint/incoming_webhook?secret=0this1one2is3super4secret5";
 
@@ -97,12 +98,20 @@ int readSmartmeter()
             char *endptr;
 
             x = strtol(input, &endptr, 16);
+
             Serial.println(x);
-            String unit = "kWh";
-            doc["sensors"]["smartmeter"]["value"] = x;
-            doc["sensors"]["smartmeter"]["unit"] = unit;
-            return 1;
-            break;
+            if (x / lastValue > 1.01 ){ //check is the new and old value differ by more than 1%
+              return 0;
+              break;
+            }
+            else{
+              lastValue = x; 
+              String unit = "kWh";
+              doc["sensors"]["smartmeter"]["value"] = x;
+              doc["sensors"]["smartmeter"]["unit"] = unit;
+              return 1;
+              break;
+            }
           }
           Serial.println(data);
           data = "";
@@ -157,12 +166,14 @@ void loop() {
   if (a==1){
     Serial.println("posting data:");
     postData();
+    Serial.println("waiting:");
+    delay(600000); //wait 5s later change to execution in setuploop with sleep and wake up ...
+
   }
   else{
     Serial.println("no new data, not posting");
+    delay(10000);
   }
   
-  Serial.println("waiting:");
-  delay(600000); //wait 5s later change to execution in setuploop with sleep and wake up ...
-
+  
 }
