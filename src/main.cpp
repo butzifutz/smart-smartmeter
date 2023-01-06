@@ -16,13 +16,7 @@ long lastValue = 5900 ; //because I'm to lazy to use the checksum
 int LED_BUILTIN = 2;
 const char* Endpoint = "https://eu-central-1.aws.data.mongodb-api.com/app/smartmeter_incoming-nzfqu/endpoint/incoming_webhook?secret=0this1one2is3super4secret5";
 
-void setup(){
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
-  Serial.begin(9600);
-  delay(500);
-  connectWifi();
-}
+
 void connectWifi(){
   Serial.println("Connecting to ");
   Serial.println(" ");
@@ -38,6 +32,14 @@ void connectWifi(){
   digitalWrite(LED_BUILTIN, LOW);
 }
 
+
+void setup(){
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+  Serial.begin(9600);
+  delay(500);
+  connectWifi();
+}
 
 
 
